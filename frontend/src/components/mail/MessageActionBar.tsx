@@ -14,6 +14,9 @@ import {
   ShieldCheck,
   Loader2,
   Printer,
+  ArrowLeft,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
@@ -86,6 +89,10 @@ export function MessageActionBar() {
   const { data: replyDraft } = useReplyDraft(messageId);
 
   const disabled = !data;
+  const readingPaneVisible = useUiStore((s) => s.readingPaneVisible);
+  const readingPaneExpanded = useUiStore((s) => s.readingPaneExpanded);
+  const toggleReadingPaneExpanded = useUiStore((s) => s.toggleReadingPaneExpanded);
+  const selectMessage = useUiStore((s) => s.selectMessage);
   const effectiveAnimationMode = useUiStore((s) => s.effectiveAnimationMode);
   const shouldAnimate = effectiveAnimationMode !== "off";
   const barMotionProps = useMemo(() => createFadeSlideVariants(effectiveAnimationMode, "y"), [effectiveAnimationMode]);
@@ -319,6 +326,19 @@ export function MessageActionBar() {
       exit="exit"
       className="flex shrink-0 flex-wrap items-center gap-0.5 border-b border-border px-2 py-1"
     >
+      {/* Back to list (full-width mode: the message replaces the list) */}
+      {!readingPaneVisible && selectedMessageUid !== null && (
+        <>
+          <ActionTooltip label="Back to list (Esc)">
+            <Button aria-label="Back to list" variant="ghost" size="sm" className="shrink-0 gap-1.5" onClick={() => selectMessage(null)}>
+              <ArrowLeft className="size-4" />
+              <span className="hidden xl:inline">Back</span>
+            </Button>
+          </ActionTooltip>
+          <div className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+        </>
+      )}
+
       {/* Reply */}
       <ActionTooltip label="Reply">
         <Button aria-label="Reply" variant="ghost" size="sm" className="shrink-0 gap-1.5" disabled={disabled} onClick={handleReply}>
@@ -558,6 +578,22 @@ export function MessageActionBar() {
       {/* Tags */}
       {data && (
         <TagPicker folder={activeFolder} uid={data.uid} />
+      )}
+
+      {/* Expand: hide folders and list so the message fills the screen */}
+      {selectedMessageUid !== null && (
+        <ActionTooltip label={readingPaneExpanded ? "Exit full view (])" : "Full view (])"}>
+          <Button
+            aria-label={readingPaneExpanded ? "Exit full view" : "Full view"}
+            aria-pressed={readingPaneExpanded}
+            variant="ghost"
+            size="sm"
+            className="ml-auto shrink-0 gap-1.5"
+            onClick={toggleReadingPaneExpanded}
+          >
+            {readingPaneExpanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          </Button>
+        </ActionTooltip>
       )}
     </AnimatedDiv>
     </ActionTooltipProvider>

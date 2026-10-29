@@ -12,6 +12,7 @@ import { MessageActionBar } from "@/components/mail/MessageActionBar";
 import { isValidCommittedSearch } from "@/lib/search-parser";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileHeader } from "@/components/shared/MobileHeader";
+import { cn } from "@/lib/utils";
 
 interface ThreePanelLayoutProps {
   sidebar: React.ReactNode;
@@ -98,9 +99,21 @@ export function ThreePanelLayout({
   const centerTransition = useMemo(() => createFadeSlideVariants(effectiveAnimationMode, "x"), [effectiveAnimationMode]);
   const readingPaneTransition = useMemo(() => createFadeSlideVariants(effectiveAnimationMode, "x"), [effectiveAnimationMode]);
   const readingPaneVisible = useUiStore((s) => s.readingPaneVisible);
+  const readingPaneExpanded = useUiStore((s) => s.readingPaneExpanded);
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
   const hasValidCommittedSearch = isValidCommittedSearch(searchQuery);
   const showSearchResults = searchActive && hasValidCommittedSearch;
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
+
+  // Desktop layout: the open message can replace the list, either permanently
+  // (reading pane off = full-width mode) or temporarily (expanded focus view).
+  const messageOpen = selectedMessageUid !== null;
+  const expanded = readingPaneExpanded && messageOpen;
+  const showList = !(messageOpen && (expanded || !readingPaneVisible));
+  const showReading = readingPaneVisible || messageOpen;
+  const showSidebar = !sidebarCollapsed && !expanded;
+  const splitView = showList && showReading;
+  const effectiveSidebarWidth = showSidebar ? sidebarWidth : 0;
 
   useEffect(() => {
     const node = containerRef.current;
@@ -120,7 +133,7 @@ export function ThreePanelLayout({
   }, []);
 
   const maxMessageListWidth = useMemo(() => {
-    if (!readingPaneVisible) {
+    if (!splitView) {
       return MAX_MESSAGE_LIST_WIDTH;
     }
 
@@ -130,7 +143,7 @@ export function ThreePanelLayout({
 
     const remaining = Math.floor(
       containerWidth -
-      sidebarWidth -
+      effectiveSidebarWidth -
       RESIZE_HANDLE_BUDGET -
       MIN_READING_PANE_WIDTH,
     );
@@ -139,9 +152,9 @@ export function ThreePanelLayout({
       MIN_MESSAGE_LIST_WIDTH,
       Math.min(MAX_MESSAGE_LIST_WIDTH, remaining),
     );
-  }, [containerWidth, readingPaneVisible, sidebarWidth]);
+  }, [containerWidth, splitView, effectiveSidebarWidth]);
 
-  const resolvedMessageListWidth = readingPaneVisible
+  const resolvedMessageListWidth = splitView
     ? Math.max(MIN_MESSAGE_LIST_WIDTH, Math.min(messageListWidth, maxMessageListWidth))
     : null;
 
@@ -221,24 +234,29 @@ export function ThreePanelLayout({
   return (
     <div ref={containerRef} className="flex h-full min-h-0 w-full overflow-hidden">
       {/* Folder sidebar */}
-      <aside
-        className="shrink-0 overflow-x-hidden overflow-y-auto bg-sidebar"
-        style={{ width: sidebarWidth }}
-      >
-        {sidebar}
-      </aside>
+      {showSidebar && (
+        <>
+          <aside
+            className="shrink-0 overflow-x-hidden overflow-y-auto bg-sidebar"
+            style={{ width: sidebarWidth }}
+          >
+            {sidebar}
+          </aside>
 
-      {/* Resize handle: sidebar | message list */}
-      <ResizeHandle onDrag={handleSidebarDrag} />
+          {/* Resize handle: sidebar | message list */}
+          <ResizeHandle onDrag={handleSidebarDrag} />
+        </>
+      )}
 
       {/* Center panel — search bar + message list or search results */}
+      {showList && (
       <main
         className={
-          readingPaneVisible
-            ? "flex shrink-0 flex-col overflow-hidden border-x border-border"
-            : "flex min-w-0 flex-1 flex-col overflow-hidden border-l border-border"
+          splitView
+            ? cn("flex shrink-0 flex-col overflow-hidden border-x border-border", !showSidebar && "border-l-0")
+            : cn("flex min-w-0 flex-1 flex-col overflow-hidden border-l border-border", !showSidebar && "border-l-0")
         }
-        style={readingPaneVisible ? { width: resolvedMessageListWidth ?? messageListWidth } : undefined}
+        style={splitView ? { width: resolvedMessageListWidth ?? messageListWidth } : undefined}
       >
         <SearchBar />
         <AnimatePresence mode="wait" initial={false}>
@@ -269,10 +287,11 @@ export function ThreePanelLayout({
           )}
         </AnimatePresence>
       </main>
+      )}
 
       {/* Resize handle: message list | reading pane */}
       <AnimatePresence initial={false}>
-        {readingPaneVisible && (
+        {showReading && (
           <AnimatedDiv
             key="reading-pane"
             data-testid="three-panel-reading-pane-transition"
@@ -282,8 +301,8 @@ export function ThreePanelLayout({
             exit={readingPaneTransition.exit}
             className="flex min-h-0 min-w-0 flex-1"
           >
-            <ResizeHandle onDrag={handleMessageListDrag} />
-            <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {splitView && <ResizeHandle onDrag={handleMessageListDrag} />}
+            <section className={cn("flex min-h-0 min-w-0 flex-1 flex-col", !splitView && showSidebar && "border-l border-border")}>
               <MessageActionBar />
               {selectedMessageUid !== null ? (
                 <div className="flex min-h-0 flex-1">{readingPane}</div>

@@ -62,6 +62,10 @@ export function DisplaySettings() {
   const setTheme = useUiStore((s) => s.setTheme);
   const setComposeFormat = useUiStore((s) => s.setComposeFormat);
   const effectiveAnimationMode = useUiStore((s) => s.effectiveAnimationMode);
+  const readingPaneVisible = useUiStore((s) => s.readingPaneVisible);
+  const setReadingPaneVisible = useUiStore((s) => s.setReadingPaneVisible);
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed);
 
   const handleDensityChange = useCallback(
     (density: "compact" | "comfortable") => {
@@ -198,6 +202,35 @@ export function DisplaySettings() {
           onChange={handleAnimationModeChange}
         />
 
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Layout</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            How the mail view is arranged on larger screens. Saved in this browser.
+          </p>
+        </div>
+        <SegmentedControl
+          label="Reading pane"
+          description="Show messages beside the list, or open them full width"
+          value={readingPaneVisible ? "right" : "off"}
+          options={[
+            { value: "right", label: "Right" },
+            { value: "off", label: "Full width" },
+          ]}
+          onChange={(v) => setReadingPaneVisible(v === "right")}
+        />
+        <SegmentedControl
+          label="Folder list"
+          description="Show or hide the folder list (shortcut: [)"
+          value={sidebarCollapsed ? "hidden" : "shown"}
+          options={[
+            { value: "shown", label: "Show" },
+            { value: "hidden", label: "Hide" },
+          ]}
+          onChange={(v) => setSidebarCollapsed(v === "hidden")}
+        />
       </div>
 
       <div className="space-y-3">

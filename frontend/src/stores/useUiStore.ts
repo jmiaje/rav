@@ -9,25 +9,36 @@ const STORAGE_KEY = "rav-ui-settings";
 interface PersistedSettings {
   sidebarWidth: number;
   messageListWidth: number;
+  sidebarCollapsed: boolean;
+  readingPaneVisible: boolean;
 }
+
+const DEFAULT_SETTINGS: PersistedSettings = {
+  sidebarWidth: 200,
+  messageListWidth: 420,
+  sidebarCollapsed: false,
+  readingPaneVisible: true,
+};
 
 function loadSettings(): PersistedSettings {
   if (typeof window === "undefined") {
-    return { sidebarWidth: 200, messageListWidth: 420 };
+    return DEFAULT_SETTINGS;
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
-        sidebarWidth: parsed.sidebarWidth ?? 200,
-        messageListWidth: parsed.messageListWidth ?? 420,
+        sidebarWidth: parsed.sidebarWidth ?? DEFAULT_SETTINGS.sidebarWidth,
+        messageListWidth: parsed.messageListWidth ?? DEFAULT_SETTINGS.messageListWidth,
+        sidebarCollapsed: parsed.sidebarCollapsed ?? DEFAULT_SETTINGS.sidebarCollapsed,
+        readingPaneVisible: parsed.readingPaneVisible ?? DEFAULT_SETTINGS.readingPaneVisible,
       };
     }
   } catch {
     // ignore
   }
-  return { sidebarWidth: 200, messageListWidth: 420 };
+  return DEFAULT_SETTINGS;
 }
 
 function saveSettings(settings: Partial<PersistedSettings>) {
@@ -56,7 +67,12 @@ export interface UiState {
   selectedMessageUid: number | null;
   sidebarWidth: number;
   messageListWidth: number;
+  /** Hide the folder sidebar (desktop). Persisted per browser. */
+  sidebarCollapsed: boolean;
+  /** When false, opening a message shows it full width in place of the list. Persisted per browser. */
   readingPaneVisible: boolean;
+  /** Focus view: the open message fills the screen (sidebar and list hidden). Cleared when the message closes. */
+  readingPaneExpanded: boolean;
   density: "compact" | "comfortable";
   theme: ThemeMode;
   searchQuery: string;
@@ -85,6 +101,10 @@ export interface UiState {
   setSidebarWidth: (width: number) => void;
   setMessageListWidth: (width: number) => void;
   setReadingPaneVisible: (visible: boolean) => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleSidebarCollapsed: () => void;
+  setReadingPaneExpanded: (expanded: boolean) => void;
+  toggleReadingPaneExpanded: () => void;
   setDensity: (density: "compact" | "comfortable") => void;
   setTheme: (theme: ThemeMode) => void;
   setSearchQuery: (query: string) => void;
@@ -116,7 +136,9 @@ export const useUiStore: UseBoundStore<StoreApi<UiState>> = create<UiState>((set
   selectedMessageUid: null,
   sidebarWidth: initial.sidebarWidth,
   messageListWidth: initial.messageListWidth,
-  readingPaneVisible: true,
+  sidebarCollapsed: initial.sidebarCollapsed,
+  readingPaneVisible: initial.readingPaneVisible,
+  readingPaneExpanded: false,
   density: "comfortable",
   theme: "system",
   searchQuery: "",
@@ -138,10 +160,16 @@ export const useUiStore: UseBoundStore<StoreApi<UiState>> = create<UiState>((set
   readingShowHeaders: false,
 
   setActiveTag: (tagId) =>
-    set({ activeTagId: tagId, selectedMessageUid: null, selectedMessageUids: [], bulkSelectMode: false, mobilePanelView: "list" }),
+    set({ activeTagId: tagId, selectedMessageUid: null, readingPaneExpanded: false, selectedMessageUids: [], bulkSelectMode: false, mobilePanelView: "list" }),
   setActiveFolder: (folder) =>
-    set({ activeFolder: folder, activeTagId: null, selectedMessageUid: null, selectedMessageUids: [], bulkSelectMode: false, mobilePanelView: "list" }),
-  selectMessage: (uid) => set({ selectedMessageUid: uid, mobilePanelView: uid !== null ? "reading" : "list", readingShowHeaders: false }),
+    set({ activeFolder: folder, activeTagId: null, selectedMessageUid: null, readingPaneExpanded: false, selectedMessageUids: [], bulkSelectMode: false, mobilePanelView: "list" }),
+  selectMessage: (uid) =>
+    set({
+      selectedMessageUid: uid,
+      mobilePanelView: uid !== null ? "reading" : "list",
+      readingShowHeaders: false,
+      ...(uid === null ? { readingPaneExpanded: false } : {}),
+    }),
   setSidebarWidth: (width) => {
     saveSettings({ sidebarWidth: width });
     set({ sidebarWidth: width });
@@ -150,7 +178,17 @@ export const useUiStore: UseBoundStore<StoreApi<UiState>> = create<UiState>((set
     saveSettings({ messageListWidth: width });
     set({ messageListWidth: width });
   },
-  setReadingPaneVisible: (visible) => set({ readingPaneVisible: visible }),
+  setReadingPaneVisible: (visible) => {
+    saveSettings({ readingPaneVisible: visible });
+    set({ readingPaneVisible: visible });
+  },
+  setSidebarCollapsed: (collapsed) => {
+    saveSettings({ sidebarCollapsed: collapsed });
+    set({ sidebarCollapsed: collapsed });
+  },
+  toggleSidebarCollapsed: () => useUiStore.getState().setSidebarCollapsed(!useUiStore.getState().sidebarCollapsed),
+  setReadingPaneExpanded: (expanded) => set({ readingPaneExpanded: expanded }),
+  toggleReadingPaneExpanded: () => set((s) => ({ readingPaneExpanded: !s.readingPaneExpanded })),
   setDensity: (density) => set({ density }),
   setTheme: (theme) => set({ theme }),
   setSearchQuery: (query) => set({ searchQuery: query }),

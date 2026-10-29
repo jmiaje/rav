@@ -19,6 +19,8 @@ const shortcuts = [
   { keys: ["S"], description: "Toggle star" },
   { keys: ["U"], description: "Toggle read/unread" },
   { keys: ["Delete"], description: "Delete / move to trash" },
+  { keys: ["["], description: "Show / hide folders" },
+  { keys: ["]"], description: "Full view of open message" },
   { keys: ["Escape"], description: "Close panel / clear search" },
   { keys: ["?"], description: "Show this reference" },
 ];

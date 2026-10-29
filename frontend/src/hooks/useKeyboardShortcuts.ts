@@ -169,6 +169,8 @@ export function useKeyboardShortcuts() {
       if (e.key === "Escape") {
         if (searchActive) {
           clearSearch();
+        } else if (useUiStore.getState().readingPaneExpanded && selectedMessageUid !== null) {
+          useUiStore.getState().setReadingPaneExpanded(false);
         } else if (selectedMessageUid !== null) {
           selectMessage(null);
         }
@@ -178,6 +180,18 @@ export function useKeyboardShortcuts() {
       if (e.key === "c") {
         e.preventDefault();
         useComposeStore.getState().openCompose();
+        return;
+      }
+
+      if (e.key === "[") {
+        e.preventDefault();
+        useUiStore.getState().toggleSidebarCollapsed();
+        return;
+      }
+
+      if (e.key === "]" && selectedMessageUid !== null) {
+        e.preventDefault();
+        useUiStore.getState().toggleReadingPaneExpanded();
         return;
       }
 
