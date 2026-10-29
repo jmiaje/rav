@@ -224,11 +224,11 @@ export default function Home() {
 
   async function handleEmailContinue(e: FormEvent) {
     e.preventDefault();
-    // Capture autofilled password into state so the password step is pre-filled
-    // if the passkey attempt fails or is cancelled. Always try passkey first.
+    // Capture autofilled password into state so the password step is pre-filled.
+    // Go straight to the password step; passkey sign-in is opt-in via a button.
     const autofilled = hiddenPasswordRef.current?.value ?? "";
     if (autofilled) setPassword(autofilled);
-    await attemptPasskey(email);
+    setStep("password");
   }
 
   async function handlePasswordSubmit(e: FormEvent) {
@@ -406,6 +406,18 @@ export default function Home() {
                 >
                   {loading ? "Signing in..." : "Sign in"}
                 </Button>
+
+                {supportsPasskey && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={loading}
+                    onClick={() => attemptPasskey(email)}
+                  >
+                    Sign in with passkey
+                  </Button>
+                )}
 
               </form>
             )}
