@@ -399,9 +399,12 @@ export function ReadingPane() {
   const remoteAllowed = allowedRemoteUids.has(messageKey);
   const showRemoteBanner = !remoteAllowed && hasRemoteResources(data.html);
 
+  // The whole pane scrolls (header included), like Gmail/Outlook; the action
+  // toolbar above it stays fixed. The body area grows with the email and fills
+  // the remaining height for short ones.
   const paneContent = (
     <div
-      className="flex h-full w-full flex-col overflow-hidden"
+      className="flex h-full w-full flex-col overflow-x-hidden overflow-y-auto"
     >
       {/* Header area */}
       <div className="shrink-0 space-y-1 overflow-x-hidden border-b border-border p-4">
@@ -590,8 +593,8 @@ export function ReadingPane() {
         </div>
       )}
 
-      {/* Body area — fills remaining space */}
-      <div className="min-h-0 flex-1" key={data.uid}>
+      {/* Body area — at least the remaining space, grows with the content */}
+      <div className="flex-1" key={data.uid}>
         {showHeaders ? (
           <pre className="h-full overflow-auto whitespace-pre-wrap break-words p-4 text-xs leading-relaxed text-foreground">
             {data.raw_headers || "No headers available"}

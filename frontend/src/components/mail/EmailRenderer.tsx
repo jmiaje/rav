@@ -170,7 +170,7 @@ export function EmailRenderer({
         });
 
         // Use the container height as a minimum so email bg fills the pane
-        const containerHeight = iframe.parentElement?.clientHeight ?? 0;
+        const containerHeight = Math.ceil(iframe.parentElement?.getBoundingClientRect().height ?? 0);
         let lastHeight = 0;
         const updateHeight = () => {
           const docEl = doc?.documentElement;
@@ -181,7 +181,17 @@ export function EmailRenderer({
             docEl?.scrollHeight ?? 0,
             docEl?.offsetHeight ?? 0
           );
-          const height = Math.max(contentHeight, containerHeight);
+          // Short email: leave the height unset so `min-height: 100%` fills the
+          // pane exactly. Pinning the (rounded-up) viewport height would push the
+          // whole reading pane, which now scrolls as one, 1px past its bottom.
+          if (contentHeight <= containerHeight + 1) {
+            if (lastHeight !== 0) {
+              iframe.style.height = "";
+              lastHeight = 0;
+            }
+            return;
+          }
+          const height = contentHeight;
 
           if (Math.abs(height - lastHeight) > 2) {
             iframe.style.height = `${height}px`;
