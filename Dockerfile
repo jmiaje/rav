@@ -32,6 +32,8 @@ RUN if [ -f public/stickers/manifest.json ]; then export NEXT_PUBLIC_FEATURE_STI
 # Stage 2 — Backend build
 # ---------------------------------------------------------------------------
 FROM rust:1-bookworm AS backend-build
+# mailcow host: limit parallel rustc jobs to protect RAM
+ENV CARGO_BUILD_JOBS=2
 
 WORKDIR /app/backend
 
