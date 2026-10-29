@@ -81,7 +81,7 @@ export function useNotifications() {
           const notification = new Notification(title, {
             body,
             tag: `rav-${folder}`,
-            icon: "/notification-icon.svg",
+            icon: "/branding/icon-512.png",
           });
 
           notification.onclick = () => {

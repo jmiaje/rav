@@ -278,7 +278,11 @@ export default function Home() {
         {/* Branding */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Rav
+            <span className="sr-only">Optimus Mail</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/branding/logo-light.png" alt="" className="mx-auto h-10 w-auto dark:hidden" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/branding/logo-dark.png" alt="" className="mx-auto hidden h-10 w-auto dark:block" />
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign in to your account
