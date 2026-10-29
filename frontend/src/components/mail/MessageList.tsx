@@ -4,7 +4,7 @@ import { useRef, useCallback, useEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence } from "framer-motion";
 import { AnimatedDiv } from "@/lib/motion/AnimatedDiv";
-import { PenLine, PanelLeft, PanelRight, Inbox, Tag, RefreshCw } from "lucide-react";
+import { PenLine, Inbox, Tag, RefreshCw } from "lucide-react";
 import { useMessages, useMessage, useMessageByMessageId } from "@/hooks/useMessages";
 import { useTags, useTagMessages } from "@/hooks/useTags";
 import { useGetDraftAttachments } from "@/hooks/useCompose";
@@ -62,48 +62,6 @@ function SkeletonRows({ count, height, compact }: { count: number; height: numbe
 function parseDraftUuid(rawHeaders: string): string | null {
   const match = rawHeaders.match(/Message-ID:\s*<([^@\s>]+)@draft>/i);
   return match ? match[1] : null;
-}
-
-function ToggleSidebarButton() {
-  const collapsed = useUiStore((s) => s.sidebarCollapsed);
-  const toggle = useUiStore((s) => s.toggleSidebarCollapsed);
-  const label = collapsed ? "Show folders ([)" : "Hide folders ([)";
-
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={toggle}
-      className={cn(
-        "hidden md:flex size-6 items-center justify-center rounded transition-colors hover:bg-accent active:bg-accent/70",
-        collapsed && "text-primary",
-      )}
-    >
-      <PanelLeft className="size-3.5" />
-    </button>
-  );
-}
-
-function ToggleReadingPaneButton() {
-  const visible = useUiStore((s) => s.readingPaneVisible);
-  const setVisible = useUiStore((s) => s.setReadingPaneVisible);
-  const label = visible ? "Hide reading pane (open messages full width)" : "Show reading pane on the right";
-
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={() => setVisible(!visible)}
-      className={cn(
-        "hidden md:flex size-6 items-center justify-center rounded transition-colors hover:bg-accent active:bg-accent/70",
-        !visible && "text-primary",
-      )}
-    >
-      <PanelRight className="size-3.5" />
-    </button>
-  );
 }
 
 export function MessageList() {
@@ -383,7 +341,6 @@ export function MessageList() {
       {/* Header bar */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
-          <ToggleSidebarButton />
           {/* Select all checkbox */}
           {!isLoading && !isError && (
             <button
@@ -431,7 +388,6 @@ export function MessageList() {
           >
             <RefreshCw className={cn("size-3.5", (isFetching || isSyncing) && "animate-spin", isSyncing && "text-primary")} />
           </button>
-          <ToggleReadingPaneButton />
         </div>
       </div>
 

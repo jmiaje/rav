@@ -12,6 +12,10 @@ import {
   Sun,
   Keyboard,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import { apiPost } from "@/lib/api";
@@ -93,6 +97,10 @@ export function NavRail() {
   const queryClient = useQueryClient();
   const viewMode = useUiStore((s) => s.viewMode);
   const setViewMode = useUiStore((s) => s.setViewMode);
+  const sidebarCollapsed = useUiStore((s) => s.sidebarCollapsed);
+  const toggleSidebarCollapsed = useUiStore((s) => s.toggleSidebarCollapsed);
+  const readingPaneVisible = useUiStore((s) => s.readingPaneVisible);
+  const setReadingPaneVisible = useUiStore((s) => s.setReadingPaneVisible);
   const setTheme = useUiStore((s) => s.setTheme);
   const effectiveAnimationMode = useUiStore((s) => s.effectiveAnimationMode);
   const updatePrefs = useUpdateDisplayPreferences();
@@ -126,7 +134,8 @@ export function NavRail() {
       <div className="relative hidden md:flex h-full w-14 flex-col items-center border-r border-border bg-sidebar py-3">
         {/* Logo */}
         <div className="mb-4 flex size-10 items-center justify-center">
-          <span className="text-lg font-bold text-primary">r.</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/branding/icon-512.png" alt="Optimus Mail" className="size-8 rounded-lg" />
         </div>
 
         {/* Top actions */}
@@ -181,6 +190,25 @@ export function NavRail() {
             onClick={() => setViewMode(viewMode === "settings" ? "mail" : "settings")}
           />
         </div>
+
+        {/* Layout toggles (mail view). Kept in the rail so they stay reachable
+            whatever the panels are resized or hidden to. */}
+        {viewMode === "mail" && (
+          <div className="mt-3 flex flex-col items-center gap-1 border-t border-border pt-3">
+            <NavButton
+              icon={sidebarCollapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
+              label={sidebarCollapsed ? "Show folders ([)" : "Hide folders ([)"}
+              active={sidebarCollapsed}
+              onClick={toggleSidebarCollapsed}
+            />
+            <NavButton
+              icon={readingPaneVisible ? <PanelRightClose className="size-5" /> : <PanelRightOpen className="size-5" />}
+              label={readingPaneVisible ? "Open messages full width" : "Show reading pane on the right"}
+              active={!readingPaneVisible}
+              onClick={() => setReadingPaneVisible(!readingPaneVisible)}
+            />
+          </div>
+        )}
 
         {/* Spacer */}
         <div className="flex-1" />
